@@ -55,13 +55,14 @@ userRouter.patch("/users/:userId", (req, res) => __awaiter(void 0, void 0, void 
         return res.status(400).send({ error: "Invalid updates added" });
     }
     try {
-        const user = yield user_1.default.findByIdAndUpdate(req.params.userId, req.body, {
-            new: true,
-            runValidators: true,
-        });
+        const user = yield user_1.default.findById(req.params.userId);
         if (!user) {
             return res.status(404).send();
         }
+        updates.forEach((update) => {
+            user.set(update, req.body[update]);
+        });
+        yield user.save();
         res.status(200).send(user);
     }
     catch (e) {

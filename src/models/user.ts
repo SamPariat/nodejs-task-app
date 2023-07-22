@@ -1,5 +1,6 @@
 import { model, Schema } from "mongoose";
 import isEmail from "validator/lib/isEmail";
+import { hash } from "bcrypt";
 
 export interface IUser {
   name: string;
@@ -44,6 +45,16 @@ const userSchema = new Schema<IUser>({
       }
     },
   },
+});
+
+userSchema.pre("save", async function (next) {
+  const user = this;
+
+  if (user.isModified("password")) {
+    user.password = await hash(user.password, 8);
+  }
+
+  next();
 });
 
 const User = model<IUser>("User", userSchema);

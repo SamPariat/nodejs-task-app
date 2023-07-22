@@ -1,11 +1,11 @@
-import mongoose from "mongoose";
+import {Schema, model} from "mongoose";
 
 export interface ITask {
   description: string;
   completed: boolean;
 }
 
-const taskSchema = new mongoose.Schema<ITask>({
+const taskSchema = new Schema<ITask>({
   description: {
     type: String,
     trim: true,
@@ -17,6 +17,6 @@ const taskSchema = new mongoose.Schema<ITask>({
   },
 });
 
-const Task = mongoose.model<ITask>("Task", taskSchema);
+const Task = model<ITask>("Task", taskSchema);
 
 export default Task;

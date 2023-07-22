@@ -55,13 +55,14 @@ taskRouter.patch("/tasks/:taskId", (req, res) => __awaiter(void 0, void 0, void 
         return res.status(400).send({ error: "Invalid updates added" });
     }
     try {
-        const task = yield task_1.default.findByIdAndUpdate(req.params.taskId, req.body, {
-            new: true,
-            runValidators: true,
-        });
+        const task = yield task_1.default.findById(req.params.taskId);
         if (!task) {
             return res.status(404).send();
         }
+        updates.forEach((update) => {
+            task.set(update, req.body[update]);
+        });
+        yield task.save();
         res.status(200).send(task);
     }
     catch (e) {
