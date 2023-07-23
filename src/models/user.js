@@ -1,4 +1,4 @@
-import { compare, hash } from "bcrypt";
+import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { Schema, model } from "mongoose";
 import isEmail from "validator/lib/isEmail.js";
@@ -72,7 +72,7 @@ userSchema.statics.findByCredentials = async function (email, password) {
     throw new Error("Unable to log in");
   }
 
-  const isPasswordMatch = await compare(password, user.get("password"));
+  const isPasswordMatch = await bcrypt.compare(password, user.get("password"));
 
   if (!isPasswordMatch) {
     throw new Error("Unable to login");
@@ -86,7 +86,7 @@ userSchema.pre("save", async function (next) {
   const user = this;
 
   if (user.isModified("password")) {
-    user.password = await hash(user.password, 8);
+    user.password = await bcrypt.hash(user.password, 8);
   }
 
   next();

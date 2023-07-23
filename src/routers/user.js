@@ -34,13 +34,8 @@ userRouter.post("/users/login", async (req, res) => {
   }
 });
 
-userRouter.get("/users", async (req, res) => {
-  try {
-    const users = await User.find({});
-    res.status(200).send(users);
-  } catch (e) {
-    res.status(500).send();
-  }
+userRouter.get("/users/me", auth, async (req, res) => {
+  res.status(200).send(req.user);
 });
 
 userRouter.get("/users/:userId", async (req, res) => {

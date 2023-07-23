@@ -2,13 +2,17 @@ import jwt from "jsonwebtoken";
 
 import User from "../models/user.js";
 
+// An authentication middleware that first
+// checks if the token is present, decodes the token
+// and then finds a user with the id & token from the token's data
+// If no user is found, an error is thrown
 export const auth = async (req, res, next) => {
   try {
-    const token = req.header("Authorization")?.replace("Bearer ", "");
+    const token = req.header("Authorization").replace("Bearer ", "");
     const decoded = jwt.verify(token, process.env.SECRET_KEY);
     const user = await User.findOne({
       _id: decoded._id,
-      "tokens.token": "token",
+      "tokens.token": token,
     });
 
     if (!user) {
