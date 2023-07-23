@@ -1,12 +1,12 @@
-import { Request, Response, Router } from "express";
+import { Router } from "express";
 
-import Task, { ITask } from "../models/task";
+import Task from "../models/task.js";
 
 const taskRouter = Router();
 
-taskRouter.post("/tasks", async (req: Request, res: Response) => {
+taskRouter.post("/tasks", async (req, res) => {
   try {
-    const task = new Task(req.body as ITask);
+    const task = new Task(req.body);
 
     await task.save();
     res.status(201).send(task);
@@ -15,7 +15,7 @@ taskRouter.post("/tasks", async (req: Request, res: Response) => {
   }
 });
 
-taskRouter.get("/tasks", async (req: Request, res: Response) => {
+taskRouter.get("/tasks", async (req, res) => {
   try {
     const tasks = await Task.find({});
 
@@ -25,7 +25,7 @@ taskRouter.get("/tasks", async (req: Request, res: Response) => {
   }
 });
 
-taskRouter.get("/tasks/:taskId", async (req: Request, res: Response) => {
+taskRouter.get("/tasks/:taskId", async (req, res) => {
   const _id = req.params.taskId;
 
   try {
@@ -41,7 +41,7 @@ taskRouter.get("/tasks/:taskId", async (req: Request, res: Response) => {
   }
 });
 
-taskRouter.patch("/tasks/:taskId", async (req: Request, res: Response) => {
+taskRouter.patch("/tasks/:taskId", async (req, res) => {
   const updates = Object.keys(req.body);
   const allowedUpdates = ["description", "completed"];
   const isValidUpdate = updates.every((update) =>
@@ -72,7 +72,7 @@ taskRouter.patch("/tasks/:taskId", async (req: Request, res: Response) => {
   }
 });
 
-taskRouter.delete("/tasks/:taskId", async (req: Request, res: Response) => {
+taskRouter.delete("/tasks/:taskId", async (req, res) => {
   try {
     const task = await Task.findByIdAndDelete(req.params.taskId);
 

@@ -1,21 +1,40 @@
-import { Request, Response, Router } from "express";
+import { Router } from "express";
 
-import User, { IUser } from "../models/user";
+import { auth } from "../middleware/auth.js";
+import User from "../models/user.js";
 
 const userRouter = Router();
 
-userRouter.post("/users", async (req: Request, res: Response) => {
+userRouter.post("/users", async (req, res) => {
   try {
-    const user = new User(req.body as IUser);
+    const user = new User(req.body);
 
     await user.save();
-    res.status(201).send(user);
+
+    const token = user.generateAuthToken();
+
+    res.status(201).send({ user, token });
   } catch (e) {
-    res.status(400).send(e);
+    res.status(400).send();
   }
 });
 
-userRouter.get("/users", async (req: Request, res: Response) => {
+userRouter.post("/users/login", async (req, res) => {
+  try {
+    const user = await User.findByCredentials(
+      req.body.email,
+      req.body.password
+    );
+
+    const token = await user.generateAuthToken();
+
+    res.status(200).send({ user, token });
+  } catch (e) {
+    res.status(400).send();
+  }
+});
+
+userRouter.get("/users", async (req, res) => {
   try {
     const users = await User.find({});
     res.status(200).send(users);
@@ -24,7 +43,7 @@ userRouter.get("/users", async (req: Request, res: Response) => {
   }
 });
 
-userRouter.get("/users/:userId", async (req: Request, res: Response) => {
+userRouter.get("/users/:userId", async (req, res) => {
   const _id = req.params.userId;
 
   try {
@@ -40,7 +59,7 @@ userRouter.get("/users/:userId", async (req: Request, res: Response) => {
   }
 });
 
-userRouter.patch("/users/:userId", async (req: Request, res: Response) => {
+userRouter.patch("/users/:userId", async (req, res) => {
   const updates = Object.keys(req.body);
   const allowedUpdates = ["name", "email", "password", "age"];
   const isValidUpdate = updates.every((update) =>
@@ -54,16 +73,14 @@ userRouter.patch("/users/:userId", async (req: Request, res: Response) => {
   try {
     const user = await User.findById(req.params.userId);
 
-    
     if (!user) {
       return res.status(404).send();
     }
-    
+
     updates.forEach((update) => {
       user.set(update, req.body[update]);
     });
-    
-    
+
     await user.save();
 
     res.status(200).send(user);
@@ -73,7 +90,7 @@ userRouter.patch("/users/:userId", async (req: Request, res: Response) => {
   }
 });
 
-userRouter.delete("/users/:userId", async (req: Request, res: Response) => {
+userRouter.delete("/users/:userId", async (req, res) => {
   try {
     const user = await User.findByIdAndDelete(req.params.userId);
 
