@@ -34,6 +34,32 @@ userRouter.post("/users/login", async (req, res) => {
   }
 });
 
+userRouter.post("/users/logout", auth, async (req, res) => {
+  try {
+    // Remove token that was used when authenticating
+    req.user.tokens = req.user.tokens.filter((token) => {
+      return token.token !== req.token;
+    });
+    await req.user.save();
+
+    res.status(200).send();
+  } catch (e) {
+    res.status(500).send();
+  }
+});
+
+userRouter.post("/users/logout-all", auth, async (req, res) => {
+  try {
+    // Wipe out all the tokens that were used when authenticating
+    req.user.tokens = [];
+    await req.user.save();
+
+    res.status(200).send();
+  } catch (e) {
+    res.status(500).send();
+  }
+});
+
 userRouter.get("/users/me", auth, async (req, res) => {
   res.status(200).send(req.user);
 });
