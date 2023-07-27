@@ -50,6 +50,29 @@ const userSchema = new Schema({
   ],
 });
 
+// Create a relationship between the User and the Task model
+// Allows to create a reference to the Task model
+userSchema.virtual("tasks", {
+  ref: "Task",
+  localField: "_id", // The field in the User model
+  foreignField: "author", // The field in the Task model
+});
+
+// For an individual user - Accessed by 'user'
+userSchema.methods.toJSON = function () {
+  // toJSON() is a property of an object to override the default serialization behavior from
+  // JSON.stringify()
+  const user = this;
+
+  // Converts the mongoose document into an object that can be manipulated
+  const userObject = user.toObject();
+
+  delete userObject.password;
+  delete userObject.tokens;
+
+  return userObject;
+};
+
 // For an individual user - Accessed by 'user'
 userSchema.methods.generateAuthToken = async function () {
   const user = this;

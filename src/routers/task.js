@@ -1,12 +1,13 @@
 import { Router } from "express";
 
+import { auth } from "../middleware/auth.js";
 import Task from "../models/task.js";
 
 const taskRouter = Router();
 
-taskRouter.post("/tasks", async (req, res) => {
+taskRouter.post("/tasks", auth, async (req, res) => {
   try {
-    const task = new Task(req.body);
+    const task = new Task({ ...req.body, author: req.user._id });
 
     await task.save();
     res.status(201).send(task);
@@ -15,21 +16,22 @@ taskRouter.post("/tasks", async (req, res) => {
   }
 });
 
-taskRouter.get("/tasks", async (req, res) => {
+taskRouter.get("/tasks", auth, async (req, res) => {
   try {
-    const tasks = await Task.find({});
+    await req.user.populate("tasks");
 
-    res.status(200).send(tasks);
+    res.status(200).send(req.user.tasks);
   } catch (e) {
+    console.log(e);
     res.status(500).send();
   }
 });
 
-taskRouter.get("/tasks/:taskId", async (req, res) => {
+taskRouter.get("/tasks/:taskId", auth, async (req, res) => {
   const _id = req.params.taskId;
 
   try {
-    const task = await Task.findById(_id);
+    const task = await Task.findOne({ _id, author: req.user._id });
 
     if (!task) {
       return res.status(404).send();
@@ -41,7 +43,7 @@ taskRouter.get("/tasks/:taskId", async (req, res) => {
   }
 });
 
-taskRouter.patch("/tasks/:taskId", async (req, res) => {
+taskRouter.patch("/tasks/:taskId", auth, async (req, res) => {
   const updates = Object.keys(req.body);
   const allowedUpdates = ["description", "completed"];
   const isValidUpdate = updates.every((update) =>
@@ -53,7 +55,10 @@ taskRouter.patch("/tasks/:taskId", async (req, res) => {
   }
 
   try {
-    const task = await Task.findById(req.params.taskId);
+    const task = await Task.findOne({
+      _id: req.params.taskId,
+      author: req.user._id,
+    });
 
     if (!task) {
       return res.status(404).send();
@@ -72,9 +77,12 @@ taskRouter.patch("/tasks/:taskId", async (req, res) => {
   }
 });
 
-taskRouter.delete("/tasks/:taskId", async (req, res) => {
+taskRouter.delete("/tasks/:taskId", auth, async (req, res) => {
   try {
-    const task = await Task.findByIdAndDelete(req.params.taskId);
+    const task = await Task.findOneAndDelete({
+      _id: req.params.taskId,
+      author: req.user._id,
+    });
 
     if (!task) {
       return res.status(404).send();

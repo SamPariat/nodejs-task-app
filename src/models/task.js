@@ -10,6 +10,13 @@ const taskSchema = new Schema({
     type: Boolean,
     default: false,
   },
+  // ref is a reference to the User model
+  // 'User' is the string provided to the User model
+  author: {
+    type: Schema.Types.ObjectId,
+    required: true,
+    ref: "User",
+  },
 });
 
 const Task = model("Task", taskSchema);
