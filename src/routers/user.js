@@ -1,9 +1,30 @@
 import { Router } from "express";
+import multer from "multer";
 
 import { auth } from "../middleware/auth.js";
 import User from "../models/user.js";
 
 const userRouter = Router();
+
+// Set up multer
+// Destination path is in 'dest'
+// Max file size is 5MB
+const multerUpload = multer({
+  dest: "profile-images",
+  limits: {
+    fileSize: 5000000,
+  },
+  fileFilter(req, file, callback) {
+    // Only allow png, jpg, jpeg files
+    if (!file.originalname.match(/\.(png|jpg|jpeg)$/)) {
+      return callback(
+        new Error("Please upload either a .png, .jpeg or .jpg file")
+      );
+    }
+
+    callback(null, true);
+  },
+});
 
 userRouter.post("/users", async (req, res) => {
   try {
@@ -101,5 +122,14 @@ userRouter.delete("/users/me", auth, async (req, res) => {
     res.status(500).send();
   }
 });
+
+// The string in multerUpload.single must match the key in the request
+userRouter.post(
+  "/users/me/profile-img",
+  multerUpload.single("img-upload"),
+  (req, res) => {
+    res.status(200).send();
+  }
+);
 
 export default userRouter;
