@@ -16,9 +16,20 @@ taskRouter.post("/tasks", auth, async (req, res) => {
   }
 });
 
+// Request is either /tasks or /tasks?completed=true or /tasks?completed=false
 taskRouter.get("/tasks", auth, async (req, res) => {
+  const match = {};
+
+  if (req.query.completed) {
+    // Convert the query from a string to a boolean
+    match.completed = req.query.completed === "true";
+  }
+
   try {
-    await req.user.populate("tasks");
+    await req.user.populate({
+      path: "tasks",
+      match,
+    });
 
     res.status(200).send(req.user.tasks);
   } catch (e) {
