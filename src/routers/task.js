@@ -18,12 +18,21 @@ taskRouter.post("/tasks", auth, async (req, res) => {
 
 // (Filtering) Request is either /tasks or /tasks?completed=true or /tasks?completed=false
 // (Pagination) Request is /tasks?limit=10&skip=10
+// (Sorting) Request is /tasks?sortBy=createdAt_asc or /tasks?sortBy=createdAt_desc
 taskRouter.get("/tasks", auth, async (req, res) => {
   const match = {};
+  const sort = {};
 
   if (req.query.completed) {
     // Convert the query from a string to a boolean
     match.completed = req.query.completed === "true";
+  }
+
+  if (req.query.sortBy) {
+    // Split by special character '_'
+    const parts = req.query.sortBy.split("_");
+    // parts[0] is createdAt and parts[1] is asc/desc
+    sort[parts[0]] = parts[1] === "desc" ? -1 : 1;
   }
 
   try {
@@ -34,6 +43,7 @@ taskRouter.get("/tasks", auth, async (req, res) => {
         // Convert the query from a string to an integer
         limit: Number.parseInt(req.query.limit),
         skip: Number.parseInt(req.query.skip),
+        sort,
       },
     });
 
