@@ -3,52 +3,60 @@ import jwt from "jsonwebtoken";
 import { Schema, model } from "mongoose";
 import isEmail from "validator/lib/isEmail.js";
 
-const userSchema = new Schema({
-  name: {
-    type: String,
-    required: true,
-    trim: true,
-  },
-  email: {
-    type: String,
-    validate(value) {
-      if (!isEmail(value)) {
-        throw new Error("Email is invalid");
-      }
+import Task from "./task.js";
+
+const userSchema = new Schema(
+  {
+    name: {
+      type: String,
+      required: true,
+      trim: true,
     },
-    trim: true,
-    lowercase: true,
-    unique: true,
-  },
-  age: {
-    type: Number,
-    validate(value) {
-      if (value < 0) {
-        throw new Error("Age must be a positive number");
-      }
+    email: {
+      type: String,
+      validate(value) {
+        if (!isEmail(value)) {
+          throw new Error("Email is invalid");
+        }
+      },
+      trim: true,
+      lowercase: true,
+      unique: true,
     },
-    default: 0,
-  },
-  password: {
-    type: String,
-    required: true,
-    minlength: 6,
-    trim: true,
-    validate(value) {
-      if (value.toLowerCase().includes("password")) {
-        throw new Error('Password cannot contain "password"');
-      }
+    age: {
+      type: Number,
+      validate(value) {
+        if (value < 0) {
+          throw new Error("Age must be a positive number");
+        }
+      },
+      default: 0,
     },
-  },
-  tokens: [
-    {
-      token: {
-        type: String,
-        required: true,
+    password: {
+      type: String,
+      required: true,
+      minlength: 6,
+      trim: true,
+      validate(value) {
+        if (value.toLowerCase().includes("password")) {
+          throw new Error('Password cannot contain "password"');
+        }
       },
     },
-  ],
-});
+    tokens: [
+      {
+        token: {
+          type: String,
+          required: true,
+        },
+      },
+    ],
+  },
+  {
+    // Adds timestamps whenever a user is created or updated
+    timestamps: true,
+  }
+);
 
 // Create a relationship between the User and the Task model
 // Allows to create a reference to the Task model
@@ -111,6 +119,15 @@ userSchema.pre("save", async function (next) {
   if (user.isModified("password")) {
     user.password = await bcrypt.hash(user.password, 8);
   }
+
+  next();
+});
+
+// Delete all the user's tasks when the user deletes their account
+userSchema.post("deleteOne", async function (next) {
+  const user = this;
+
+  await Task.deleteMany({ author: user._id });
 
   next();
 });
