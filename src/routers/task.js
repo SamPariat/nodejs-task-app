@@ -16,7 +16,8 @@ taskRouter.post("/tasks", auth, async (req, res) => {
   }
 });
 
-// Request is either /tasks or /tasks?completed=true or /tasks?completed=false
+// (Filtering) Request is either /tasks or /tasks?completed=true or /tasks?completed=false
+// (Pagination) Request is /tasks?limit=10&skip=10
 taskRouter.get("/tasks", auth, async (req, res) => {
   const match = {};
 
@@ -29,6 +30,11 @@ taskRouter.get("/tasks", auth, async (req, res) => {
     await req.user.populate({
       path: "tasks",
       match,
+      options: {
+        // Convert the query from a string to an integer
+        limit: Number.parseInt(req.query.limit),
+        skip: Number.parseInt(req.query.skip),
+      },
     });
 
     res.status(200).send(req.user.tasks);
