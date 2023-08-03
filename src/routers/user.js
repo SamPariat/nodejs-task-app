@@ -1,5 +1,6 @@
 import { Router } from "express";
 import multer from "multer";
+import sharp from "sharp";
 
 import { auth } from "../middleware/auth.js";
 import User from "../models/user.js";
@@ -131,7 +132,17 @@ userRouter.post(
   auth,
   multerUpload.single("img-upload"),
   async (req, res) => {
-    req.user.profileImage = req.file.buffer; // req.file.buffer allows to access the image if dest is not specified
+    // req.file.buffer allows to access the image if 'dest' is not specified
+    const sharpBuffer = await sharp(req.file.buffer)
+      .resize({
+        width: 250,
+        height: 250,
+      })
+      .png()
+      .toBuffer();
+
+    req.user.profileImage = sharpBuffer; // Save the profile image to the user after resizing and converting to .png format
+
     await req.user.save();
     res.status(200).send();
   },
@@ -152,5 +163,21 @@ userRouter.delete(
     res.status(400).send({ error: error.message });
   }
 );
+
+// Allow fetching of images
+userRouter.get("/users/:userId/profile-img", async (req, res) => {
+  try {
+    const user = await User.findById(req.params.userId);
+
+    if (!user || !user.profileImage) {
+      throw new Error();
+    }
+
+    res.setHeader("Content-Type", "image/png"); // Sharp reformats to .png
+    res.status(200).send(user.profileImage);
+  } catch (e) {
+    res.status(404).send();
+  }
+});
 
 export default userRouter;
