@@ -4,6 +4,10 @@ import sharp from "sharp";
 
 import { auth } from "../middleware/auth.js";
 import User from "../models/user.js";
+import {
+  sendWelcomeEmail,
+  sendCancellationEmail,
+} from "../../emails/account.js";
 
 const userRouter = Router();
 
@@ -32,6 +36,9 @@ userRouter.post("/users", async (req, res) => {
     const user = new User(req.body);
 
     await user.save();
+
+    // Send email when user creates their account
+    await sendWelcomeEmail(user.email, user.name);
 
     const token = user.generateAuthToken();
 
@@ -116,6 +123,9 @@ userRouter.patch("/users/me", auth, async (req, res) => {
 userRouter.delete("/users/me", auth, async (req, res) => {
   try {
     await req.user.deleteOne();
+
+    // Send email when the user deletes their account
+    await sendCancellationEmail(req.user.email, req.user.name);
 
     res.status(200).send(req.user);
   } catch (e) {
