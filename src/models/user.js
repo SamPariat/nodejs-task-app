@@ -51,6 +51,10 @@ const userSchema = new Schema(
         },
       },
     ],
+    profileImage: {
+      // Allow storing of images in the buffer format
+      type: Buffer,
+    },
   },
   {
     // Adds timestamps whenever a user is created or updated

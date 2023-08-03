@@ -10,7 +10,7 @@ const userRouter = Router();
 // Destination path is in 'dest'
 // Max file size is 5MB
 const multerUpload = multer({
-  dest: "profile-images",
+  // dest: "profile-images",
   limits: {
     fileSize: 5000000,
   },
@@ -124,11 +124,32 @@ userRouter.delete("/users/me", auth, async (req, res) => {
 });
 
 // The string in multerUpload.single must match the key in the request
+// First make sure that the user is authenticated
+// Then run the multer middleware
 userRouter.post(
   "/users/me/profile-img",
+  auth,
   multerUpload.single("img-upload"),
-  (req, res) => {
+  async (req, res) => {
+    req.user.profileImage = req.file.buffer; // req.file.buffer allows to access the image if dest is not specified
+    await req.user.save();
     res.status(200).send();
+  },
+  (error, req, res, next) => {
+    res.status(400).send({ error: error.message });
+  }
+);
+
+userRouter.delete(
+  "/users/me/profile-img",
+  auth,
+  async (req, res) => {
+    req.user.profileImage = undefined;
+    await req.user.save();
+    res.status(200).send();
+  },
+  (error, req, res, next) => {
+    res.status(400).send({ error: error.message });
   }
 );
 
