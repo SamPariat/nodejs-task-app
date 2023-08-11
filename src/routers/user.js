@@ -42,6 +42,9 @@ userRouter.post("/users", async (req, res) => {
 
     const token = user.generateAuthToken();
 
+    // Set the authentication token cookie when signed up
+    res.cookie("auth_token", token);
+
     res.status(201).send({ user, token });
   } catch (e) {
     res.status(400).send();
@@ -56,6 +59,9 @@ userRouter.post("/users/login", async (req, res) => {
     );
 
     const token = await user.generateAuthToken();
+
+    // Send the authentication token cookie when logged in
+    res.cookie("auth_token", token);
 
     res.status(200).send({ user, token });
   } catch (e) {
