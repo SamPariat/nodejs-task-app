@@ -47,11 +47,15 @@ userRouter.post("/users", async (req, res) => {
 
     res.status(201).send({ user, token });
   } catch (e) {
+    if (e.type === "MailgunAPIError") {
+      return res.status(403).send();
+    }
     res.status(400).send();
   }
 });
 
 userRouter.post("/users/login", async (req, res) => {
+  console.log("Hello")
   try {
     const user = await User.findByCredentials(
       req.body.email,

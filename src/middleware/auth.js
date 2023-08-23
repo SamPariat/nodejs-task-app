@@ -8,8 +8,7 @@ import User from "../models/user.js";
 // If no user is found, an error is thrown
 export const auth = async (req, res, next) => {
   try {
-    // const token = req.header("Authorization").replace("Bearer ", "");
-    const token = req.cookies["auth_token"];
+    const token = req.header("Authorization").replace("Bearer ", "") || req.cookies["auth_token"];
     const decoded = jwt.verify(token, process.env.SECRET_KEY);
     const user = await User.findOne({
       _id: decoded._id,
